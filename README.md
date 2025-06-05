@@ -12,7 +12,7 @@ A standalone Java 8 CLI tool for parsing, filtering, sorting, and outputting car
 ## Usage
 
 ```sh
-java -jar CarApp.jar <inputFile> <filterType> <filterValue1> <filterValue2> [sortType] [outputFormat]
+java -jar CarProcessorApp.jar <inputFile> <filterType> <filterValue1> <filterValue2> [sortType] [outputFormat]
 ```
 
 **Important:**  
@@ -23,15 +23,15 @@ If not, provide the full path to the input file.
 
 - Table output, filter by brand & price, sort by year:
   ```
-  java -jar CarApp.jar cars.xml brand-price Toyota 25000 year table
+  java -jar CarProcessorApp.jar cars.xml brand-price Toyota 25000 year table
   ```
 - JSON output, filter by brand & release date, sort by price:
   ```
-  java -jar CarApp.jar cars.csv brand-date Honda 2022-05-01 price json
+  java -jar CarProcessorApp.jar cars.csv brand-date Honda 2022-05-01 price json
   ```
 - **Currency-based sorting** (SUVs in EUR, Sedans in JPY, Trucks in USD):
   ```
-  java -jar CarApp.jar cars.xml brand-price Toyota 25000 currency-sort table
+  java -jar CarProcessorApp.jar cars.xml brand-price Toyota 25000 currency-sort table
   ```
 
 ### Sort Types

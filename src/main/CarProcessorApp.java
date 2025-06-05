@@ -1,11 +1,14 @@
 package main;
 
 import java.util.*;
-import java.text.SimpleDateFormat;
+import filter.*;
+import formatter.*;
+import sorter.*;
+import model.Car;
 import parser.CarParser;
 import parser.XMLCarParser;
 import parser.CSVCarParser;
-import model.Car;
+import exception.CarProcessingException;
 
 public class CarProcessorApp {
     public static void main(String[] args) {
@@ -15,52 +18,85 @@ public class CarProcessorApp {
                 return;
             }
             String inputFile = args[0];
-            String format = inputFile.endsWith(".xml") ? "xml" : "csv";
-            CarParser parser = format.equals("xml") ? new XMLCarParser() : new CSVCarParser();
+            String filterType = args[1];
+
+            CarParser parser = getParser(inputFile);
             List<Car> cars = parser.parse(inputFile);
 
-            // CLI options
-            String filterType = args[1];
-            List<Car> filtered = cars;
-
-            if (filterType.equalsIgnoreCase("brand-price")) {
-                String brand = args[2];
-                double price = Double.parseDouble(args[3]);
-                filtered = CarFilter.filterByBrandAndPrice(cars, brand, price);
-            } else if (filterType.equalsIgnoreCase("brand-date")) {
-                String brand = args[2];
-                String dateStr = args[3];
-                Date date = new SimpleDateFormat("yyyy-MM-dd").parse(dateStr);
-                filtered = CarFilter.filterByBrandAndReleaseDate(cars, brand, date);
+            if (cars == null || cars.isEmpty()) {
+                throw new CarProcessingException("No cars loaded from file: " + inputFile);
             }
 
-            // Sorting
-            if (args.length > 4) {
-                String sortType = args[4];
-                if (sortType.equalsIgnoreCase("year")) {
-                    CarSorter.sortByReleaseYearDesc(filtered);
-                } else if (sortType.equalsIgnoreCase("price")) {
-                    CarSorter.sortByPriceDesc(filtered);
-                } else if (sortType.equalsIgnoreCase("currency-sort")) {
-                    // Only use cars matching the type/currency rules
-                    filtered = CarSorter.sortByTypeAndCurrency(filtered);
-                }
+            // --- FILTER SELECTION ---
+            CarFilterStrategy filterStrategy = getFilterStrategy(filterType);
+            String[] filterArgs = Arrays.copyOfRange(args, 2, Math.min(args.length, 4));
+            List<Car> filtered = filterStrategy.filter(cars, filterArgs);
+
+            // --- SORT SELECTION ---
+            String sortType = args.length > 4 ? args[4] : "";
+            if (!sortType.isEmpty()) {
+                CarSorterStrategy sorter = getSorterStrategy(sortType);
+                sorter.sort(filtered);
             }
 
-            // Output
+            // --- FORMAT SELECTION ---
             String outputFormat = (args.length > 5) ? args[5] : "table";
-            if (outputFormat.equalsIgnoreCase("table")) {
-                CarFormatter.printTable(filtered);
-            } else if (outputFormat.equalsIgnoreCase("xml")) {
-                CarFormatter.printXml(filtered);
-            } else if (outputFormat.equalsIgnoreCase("json")) {
-                CarFormatter.printJson(filtered);
-            } else {
-                System.out.println("Unknown output format.");
-            }
-        } catch (Exception e) {
+            CarFormatterStrategy formatter = getFormatterStrategy(outputFormat);
+            formatter.format(filtered);
+
+        } catch (CarProcessingException e) {
             System.err.println("Error: " + e.getMessage());
             printUsage();
+        } catch (Exception e) {
+            System.err.println("Unexpected error: " + e.getMessage());
+            printUsage();
+        }
+    }
+
+    private static CarParser getParser(String inputFile) throws CarProcessingException {
+        if (inputFile.endsWith(".xml")) {
+            return new XMLCarParser();
+        } else if (inputFile.endsWith(".csv")) {
+            return new CSVCarParser();
+        } else {
+            throw new CarProcessingException("Unsupported file format: " + inputFile);
+        }
+    }
+
+    private static CarFilterStrategy getFilterStrategy(String type) throws CarProcessingException {
+        switch (type.toLowerCase()) {
+            case "brand-price": return new BrandAndPriceFilter();
+            case "brand-date":  return new BrandAndDateFilter();
+            default:
+                throw new CarProcessingException("Unsupported filter type: " + type);
+        }
+    }
+
+    private static CarSorterStrategy getSorterStrategy(String type) throws CarProcessingException {
+        switch (type.toLowerCase()) {
+            case "year":
+            case "releaseyear":
+            case "release-year":
+                return new sorter.ReleaseYearDescSorter();
+            case "price":
+                return new sorter.PriceDescSorter();
+            case "currency-sort":
+                return new sorter.CurrencySortSorter();
+            default:
+                throw new CarProcessingException("Unsupported sort type: " + type);
+        }
+    }
+
+    private static CarFormatterStrategy getFormatterStrategy(String format) throws CarProcessingException {
+        switch (format.toLowerCase()) {
+            case "table":
+                return new formatter.TableCarFormatter();
+            case "xml":
+                return new formatter.XmlCarFormatter();
+            case "json":
+                return new formatter.JsonCarFormatter();
+            default:
+                throw new CarProcessingException("Unknown output format: " + format);
         }
     }
 
@@ -69,12 +105,10 @@ public class CarProcessorApp {
         System.out.println("  java -jar CarApp.jar <inputFile> <filterType> <filterValue1> <filterValue2> [sortType] [outputFormat]");
         System.out.println("Examples:");
         System.out.println("  java -jar CarApp.jar cars.xml brand-price Toyota 25000 year table");
-        System.out.println("  java -jar CarApp.jar cars.csv brand-date Honda 2022-05-01 price json");
-        System.out.println("  java -jar CarApp.jar cars.xml brand-price Toyota 25000 currency-sort table");
+        System.out.println("  java -jar CarApp.jar cars.csv brand-date Honda 2022-05-01 price xml");
+        System.out.println("  java -jar CarApp.jar cars.xml brand-price Toyota 25000 currency-sort json");
         System.out.println();
-        System.out.println("Sort types:");
-        System.out.println("  year           - Sort by release year (desc)");
-        System.out.println("  price          - Sort by price (desc)");
-        System.out.println("  currency-sort  - SUVs in EUR, Sedans in JPY, Trucks in USD (price desc)");
+        System.out.println("Sort types: year, price, currency-sort");
+        System.out.println("Output formats: table, xml, json");
     }
 }
