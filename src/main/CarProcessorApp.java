@@ -102,11 +102,11 @@ public class CarProcessorApp {
 
     private static void printUsage() {
         System.out.println("Usage:");
-        System.out.println("  java -jar CarApp.jar <inputFile> <filterType> <filterValue1> <filterValue2> [sortType] [outputFormat]");
+        System.out.println("  java -jar CarProcessorApp.jar <inputFile> <filterType> <filterValue1> <filterValue2> [sortType] [outputFormat]");
         System.out.println("Examples:");
-        System.out.println("  java -jar CarApp.jar cars.xml brand-price Toyota 25000 year table");
-        System.out.println("  java -jar CarApp.jar cars.csv brand-date Honda 2022-05-01 price xml");
-        System.out.println("  java -jar CarApp.jar cars.xml brand-price Toyota 25000 currency-sort json");
+        System.out.println("  java -jar CarProcessorApp.jar cars.xml brand-price Toyota 25000 year table");
+        System.out.println("  java -jar CarProcessorApp.jar cars.csv brand-date Honda 2022-05-01 price xml");
+        System.out.println("  java -jar CarProcessorApp.jar cars.xml brand-price Toyota 25000 currency-sort json");
         System.out.println();
         System.out.println("Sort types: year, price, currency-sort");
         System.out.println("Output formats: table, xml, json");
