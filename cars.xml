@@ -1,0 +1,9 @@
+<cars>
+  <car>
+    <brand>Toyota</brand>
+    <type>SUV</type>
+    <price>20000</price>
+    <currency>EUR</currency>
+    <releaseDate>2021-04-01</releaseDate>
+  </car>
+</cars>
