@@ -1,6 +1,6 @@
 # CarProcessorApp
 
-A standalone Java 8 CLI tool for parsing, filtering, sorting, and outputting car data from XML or CSV files.
+A standalone Java CLI tool for parsing, filtering, sorting, and outputting car data from XML or CSV files.
 
 ## Features
 
